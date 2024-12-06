@@ -1,0 +1,40 @@
+package com.example.demo.controller;
+
+import com.example.demo.entity.Product;
+import com.example.demo.service.ProduceService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@CrossOrigin("*")
+@RequestMapping(path = "/product")
+public class ProductController {
+    private final ProduceService produceService;
+
+    @Autowired
+    public ProductController(ProduceService produceService) {
+        this.produceService = produceService;
+    }
+
+    @GetMapping
+    public List<Product> findAll() {
+        return produceService.findAll();
+    }
+
+//    @PostMapping
+//    public Product save(@RequestBody Product product) {
+//        return produceService.save(product);
+//    }
+//
+//    @PutMapping
+//    public Product update(@RequestBody Product product) {
+//        return produceService.update(product);
+//    }
+//
+//    @DeleteMapping("/{id}")
+//    public void deleteById(@PathVariable Integer id) {
+//        produceService.deleteById(id);
+//    }
+}
