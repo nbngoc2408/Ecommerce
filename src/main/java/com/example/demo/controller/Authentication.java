@@ -3,8 +3,10 @@ package com.example.demo.controller;
 import com.example.demo.entity.Customers;
 import com.example.demo.exception.CustomerException;
 import com.example.demo.exception.EmailFailureException;
+import com.example.demo.exception.EmailNotFoundException;
 import com.example.demo.exception.UserNotVerifiedException;
 import com.example.demo.request.LoginBody;
+import com.example.demo.request.PasswordResetBody;
 import com.example.demo.request.RegistrationBody;
 import com.example.demo.response.LoginResponse;
 import com.example.demo.service.CustomersService;
@@ -76,5 +78,23 @@ public class Authentication {
     public Customers getUserLogin(@AuthenticationPrincipal Customers customers) {
 //        SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return customers;
+    }
+
+    @PostMapping("/forgot")
+    public ResponseEntity<Object> forgotPassword(@RequestParam String email) {
+        try {
+            customersService.forgotPassword(email);
+            return ResponseEntity.ok().build();
+        } catch (EmailFailureException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (EmailNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    @PostMapping("/reset")
+    public ResponseEntity<Object> resetPassword(@Valid @RequestBody PasswordResetBody passwordResetBody) {
+        customersService.resetPassword(passwordResetBody);
+        return ResponseEntity.ok().build();
     }
 }

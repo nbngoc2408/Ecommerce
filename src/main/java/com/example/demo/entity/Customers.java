@@ -46,6 +46,7 @@ public class Customers {
 
     @OneToMany(mappedBy = "customers", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id desc ")
+    @JsonIgnore
     private List<VerificationToken> verificationTokens = new ArrayList<>();
 
     @Column(name = "email_verified", nullable = false)

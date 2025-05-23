@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.demo.entity.Customers;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,7 @@ public class JWTService {
 
     private final static String EMAIL_KEY = "EMAIL";
     private final static String VERIFY_KEY = "VERIFY";
+    private final static String RESET_PASSWORD_EMAIL_VERIFY = "RESET_PASSWORD_VERIFY";
 
     private Algorithm algorithm;
 
@@ -30,19 +32,32 @@ public class JWTService {
 
     public String generateJWT(Customers customers) {
         return JWT.create().withClaim(EMAIL_KEY, customers.getEmail())
-                .withExpiresAt(new Date(System.currentTimeMillis() * (1000L * expiryInSeconds)))
+                .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * 60 * 30)))
                 .withIssuer(issuer)
                 .sign(algorithm);
     }
 
     public String generateVerificationJWT(Customers customers) {
         return JWT.create().withClaim(VERIFY_KEY, customers.getFirstName())
-                .withExpiresAt(new Date(System.currentTimeMillis() * (1000L * expiryInSeconds)))
+                .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * expiryInSeconds)))
+                .withIssuer(issuer)
+                .sign(algorithm);
+    }
+
+    public String generateResetPassword(Customers customers) {
+        return JWT.create().withClaim(RESET_PASSWORD_EMAIL_VERIFY, customers.getEmail())
+                .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * 60 * 5)))
                 .withIssuer(issuer)
                 .sign(algorithm);
     }
 
     public String getUserEmail(String token) {
-        return JWT.decode(token).getClaim(EMAIL_KEY).asString();
+        DecodedJWT jwt = JWT.require(algorithm).build().verify(token); //verify token (expired or using other algorithms)
+        return jwt.getClaim(EMAIL_KEY).asString();
+    }
+
+    public String getEmailResetPassword(String token) {
+        DecodedJWT jwt = JWT.require(algorithm).build().verify(token); //verify token (expired or using other algorithms)
+        return jwt.getClaim(RESET_PASSWORD_EMAIL_VERIFY).asString();
     }
 }

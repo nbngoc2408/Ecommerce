@@ -1,10 +1,16 @@
 package com.example.demo.controller;
 
+import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.example.demo.entity.Product;
 import com.example.demo.service.ProduceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -19,8 +25,14 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> findAll() {
-        return produceService.findAll();
+    public ResponseEntity<List<Product>> findAll() {
+        List<Product> listProduct = new ArrayList<>();
+        try {
+            listProduct = produceService.findAll();
+        } catch (JWTVerificationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        return ResponseEntity.ok(listProduct);
     }
 
 //    @PostMapping

@@ -4,10 +4,12 @@ import com.example.demo.entity.Customers;
 import com.example.demo.entity.VerificationToken;
 import com.example.demo.exception.CustomerException;
 import com.example.demo.exception.EmailFailureException;
+import com.example.demo.exception.EmailNotFoundException;
 import com.example.demo.exception.UserNotVerifiedException;
 import com.example.demo.repository.CustomersRepository;
 import com.example.demo.repository.VerificationTokenRepository;
 import com.example.demo.request.LoginBody;
+import com.example.demo.request.PasswordResetBody;
 import com.example.demo.request.RegistrationBody;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -112,5 +115,37 @@ public class CustomersService {
             }
         }
         return false;
+    }
+
+    @Transactional
+    public void forgotPassword(String email) throws EmailFailureException, EmailNotFoundException {
+        Optional<Customers> optionalCustomers = customersRepository.findByEmailIgnoreCase(email);
+        if (optionalCustomers.isPresent()) {
+            Customers customers = optionalCustomers.get();
+            String token = jwtService.generateResetPassword(customers);
+            emailService.sendResetPasswordEmail(customers, token);
+        } else {
+            throw new EmailNotFoundException();
+        }
+    }
+
+    @Transactional
+    public void resetPassword (PasswordResetBody passwordResetBody) {
+        String email = jwtService.getEmailResetPassword(passwordResetBody.getToken());
+        Optional<Customers> optCus = customersRepository.findByEmailIgnoreCase(email);
+        if (optCus.isPresent()) {
+            Customers customers = optCus.get();
+            String passwordEncode = encryptService.encryptPassword(passwordResetBody.getPassword());
+            customers.setPassword(passwordEncode);
+            customersRepository.save(customers);
+        }
+    }
+
+    public  boolean userHasPermissionToUser (Customers customers, Integer id) {
+        return Objects.equals(customers.getId(), id);
+    }
+
+    public boolean verifyCustomerId(Customers customers, Integer id) {
+        return !customers.getId().equals(id);
     }
 }
