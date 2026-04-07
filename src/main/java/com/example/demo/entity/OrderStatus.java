@@ -8,16 +8,16 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "category")
-public class Category {
+@Table(name = "order_status")
+public class OrderStatus {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "category_id", nullable = false)
+    @Column(name = "status_id", nullable = false)
     private Integer id;
 
-    @Size(max = 100)
-    @Column(name = "name", length = 100)
-    private String name;
+    @Size(max = 50)
+    @Column(name = "status_code", length = 50)
+    private String statusCode;
 
     @Size(max = 255)
     @Column(name = "description")

@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.Customers;
+import com.example.demo.entity.Customer;
 import com.example.demo.entity.Shipment;
 import com.example.demo.repository.ShipmentRepository;
 import com.example.demo.request.DataChange;
@@ -35,17 +35,17 @@ public class CustomersController {
     }
 
     @GetMapping()
-    public List<Customers> findAll() {
+    public List<Customer> findAll() {
         return customersService.findAll();
     }
 
     @PostMapping()
-    public Customers saveCustomer(@RequestBody Customers customers) {
+    public Customer saveCustomer(@RequestBody Customer customers) {
         return customersService.save(customers);
     }
 
     @PutMapping()
-    public Customers updateCustomer(@RequestBody Customers customers) {
+    public Customer updateCustomer(@RequestBody Customer customers) {
         return  customersService.update(customers);
     }
 
@@ -55,23 +55,25 @@ public class CustomersController {
     }
 
     @GetMapping("/{customerId}/shipment")
-    public ResponseEntity<List<Shipment>> getShipment(@AuthenticationPrincipal Customers customers , @PathVariable Integer customerId) {
+    public ResponseEntity<List<Shipment>> getShipment(@AuthenticationPrincipal Customer customers , @PathVariable Integer customerId) {
         if (customersService.verifyCustomerId(customers, customerId)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
-        return ResponseEntity.ok(shipmentRepository.findByCustomer_Id(customerId));
+        return ResponseEntity.ok(shipmentRepository.findByOrder_Customer_Id(customerId));
     }
 
     @PutMapping("/{userId}/shipment")
     public ResponseEntity<Shipment> addNewShipment(@PathVariable Integer userId, @RequestBody Shipment shipment
-            , @AuthenticationPrincipal Customers customers) {
+            , @AuthenticationPrincipal Customer customers) {
         if (customersService.verifyCustomerId(customers, userId)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         shipment.setId(null);
-        Customers refCus = new Customers(); //case admin want to add new shipment for other customers
+        Customer refCus = new Customer(); //case admin want to add new shipment for other customers
         refCus.setId(userId);
-        shipment.setCustomer(refCus);
+        com.example.demo.entity.Order order = new com.example.demo.entity.Order();
+        order.setCustomer(refCus);
+        shipment.setOrder(order);
         Shipment saveShipment = shipmentRepository.save(shipment);
         messagingTemplate.convertAndSend("/topic/user/" + userId + "/shipment",
                 new DataChange<>(DataChange.ChangeType.INSERT, saveShipment));
@@ -80,14 +82,14 @@ public class CustomersController {
 
     @PatchMapping("/{userId}/shipment/{shipmentId}")
     public ResponseEntity<Shipment> updateShipment(@PathVariable Integer shipmentId, @PathVariable Integer userId, @RequestBody Shipment shipment
-            , @AuthenticationPrincipal Customers customers) {
+            , @AuthenticationPrincipal Customer customers) {
         if (customersService.verifyCustomerId(customers, userId)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         if (Objects.equals(shipment.getId(), shipmentId)) {
             Optional<Shipment> opOriginalShipment = shipmentRepository.findById(shipmentId);
-            if (opOriginalShipment.isPresent() && Objects.equals(opOriginalShipment.get().getCustomer().getId(), userId)) {
-                shipment.setCustomer(opOriginalShipment.get().getCustomer());
+            if (opOriginalShipment.isPresent() && opOriginalShipment.get().getOrder() != null && opOriginalShipment.get().getOrder().getCustomer() != null && Objects.equals(opOriginalShipment.get().getOrder().getCustomer().getId(), userId)) {
+                shipment.setOrder(opOriginalShipment.get().getOrder());
                 Shipment saveShipment = shipmentRepository.save(shipment);
                 messagingTemplate.convertAndSend("/topic/user/" + userId + "/shipment",
                         new DataChange<>(DataChange.ChangeType.UPDATE, saveShipment));

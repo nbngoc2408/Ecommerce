@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-import com.example.demo.EcommerceApplication;
 import com.example.demo.entity.VerificationToken;
 import com.example.demo.exception.CustomerException;
 import com.example.demo.exception.EmailFailureException;
@@ -91,7 +90,7 @@ public class CustomersServiceTests {
             customersService.loginCustomer(loginBody);
             Assertions.fail("Email should not be verified.");
         } catch (UserNotVerifiedException ex) {
-            List<VerificationToken> tokenList = verificationTokenRepository.findByCustomers_EmailIgnoreCaseOrderByIdDesc(loginBody.getEmail());
+            List<VerificationToken> tokenList = verificationTokenRepository.findByCustomer_EmailIgnoreCaseOrderByIdDesc(loginBody.getEmail());
             String token = tokenList.get(0).getToken();
             Assertions.assertTrue(customersService.verifyCustomer(token), "User should verify success.");
         }

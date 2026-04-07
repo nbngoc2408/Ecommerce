@@ -3,7 +3,7 @@ package com.example.demo.service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.example.demo.entity.Customers;
+import com.example.demo.entity.Customer;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -30,21 +30,21 @@ public class JWTService {
         algorithm = Algorithm.HMAC256(algorithmKey);
     }
 
-    public String generateJWT(Customers customers) {
+    public String generateJWT(Customer customers) {
         return JWT.create().withClaim(EMAIL_KEY, customers.getEmail())
                 .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * 60 * 30)))
                 .withIssuer(issuer)
                 .sign(algorithm);
     }
 
-    public String generateVerificationJWT(Customers customers) {
+    public String generateVerificationJWT(Customer customers) {
         return JWT.create().withClaim(VERIFY_KEY, customers.getFirstName())
                 .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * expiryInSeconds)))
                 .withIssuer(issuer)
                 .sign(algorithm);
     }
 
-    public String generateResetPassword(Customers customers) {
+    public String generateResetPassword(Customer customers) {
         return JWT.create().withClaim(RESET_PASSWORD_EMAIL_VERIFY, customers.getEmail())
                 .withExpiresAt(new Date(System.currentTimeMillis() + (1000L * 60 * 5)))
                 .withIssuer(issuer)

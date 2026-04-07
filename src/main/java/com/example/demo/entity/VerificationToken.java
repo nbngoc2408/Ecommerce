@@ -3,8 +3,9 @@ package com.example.demo.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
-import java.sql.Timestamp;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -13,17 +14,18 @@ import java.sql.Timestamp;
 public class VerificationToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Long id;
+    @Column(name = "verification_token_id", nullable = false)
+    private Integer id;
 
-    @Column(name = "token", nullable = false, unique = true)
+    @Column(name = "token")
     private String token;
 
+    @ColumnDefault("now()")
     @Column(name = "created_timestamp", nullable = false)
-    private Timestamp createdTimestamp;
+    private Instant createdTimestamp;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
-    private Customers customers;
+    private Customer customer;
 
 }

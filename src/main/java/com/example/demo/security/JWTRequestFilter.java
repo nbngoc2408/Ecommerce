@@ -1,7 +1,7 @@
 package com.example.demo.security;
 
 import com.auth0.jwt.exceptions.JWTDecodeException;
-import com.example.demo.entity.Customers;
+import com.example.demo.entity.Customer;
 import com.example.demo.repository.CustomersRepository;
 import com.example.demo.service.JWTService;
 import jakarta.servlet.FilterChain;
@@ -51,9 +51,9 @@ public class JWTRequestFilter extends OncePerRequestFilter implements ChannelInt
             token = token.substring(7);
             try {
                 String userEmail = jwtService.getUserEmail(token);
-                Optional<Customers> customers = customersRepository.findByEmail(userEmail);
+                Optional<Customer> customers = customersRepository.findByEmail(userEmail);
                 if (customers.isPresent()) {
-                    Customers user = customers.get();
+                    Customer user = customers.get();
                     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     return authenticationToken;

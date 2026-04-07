@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.Customers;
+import com.example.demo.entity.Customer;
 import com.example.demo.entity.VerificationToken;
 import com.example.demo.exception.CustomerException;
 import com.example.demo.exception.EmailFailureException;
@@ -19,6 +19,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.time.Instant;
 
 @Service
 public class CustomersService {
@@ -37,11 +38,11 @@ public class CustomersService {
         this.verificationTokenRepository = verificationTokenRepository;
     }
 
-    public Customers registerCustomer(RegistrationBody register) throws CustomerException, EmailFailureException {
+    public Customer registerCustomer(RegistrationBody register) throws CustomerException, EmailFailureException {
         if (customersRepository.findByEmail(register.getEmail()).isPresent()) {
             throw new CustomerException();
         } else {
-            Customers customers = new Customers();
+            Customer customers = new Customer();
             customers.setFirstName(register.getFirstName());
             customers.setLastName(register.getLastName());
             customers.setEmail(register.getEmail());
@@ -52,43 +53,43 @@ public class CustomersService {
         }
     }
 
-    private VerificationToken createVerificationToken(Customers customers) {
+    private VerificationToken createVerificationToken(Customer customers) {
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(jwtService.generateVerificationJWT(customers));
-        verificationToken.setCreatedTimestamp(new Timestamp(System.currentTimeMillis()));
-        verificationToken.setCustomers(customers);
+        verificationToken.setCreatedTimestamp(Instant.now());
+        verificationToken.setCustomer(customers);
         customers.getVerificationTokens().add(verificationToken);
         return verificationToken;
     }
 
-    public List<Customers> findAll() {
+    public List<Customer> findAll() {
         return customersRepository.findAll();
     }
 
-    public Customers save(Customers customer) {
+    public Customer save(Customer customer) {
         return customersRepository.save(customer);
     }
 
-    public Customers update(Customers customers) {
+    public Customer update(Customer customers) {
         return customersRepository.save(customers);
     }
 
     public void deleteCustomerById(Integer id) {
-        Optional<Customers> customers = customersRepository.findById(id);
+        Optional<Customer> customers = customersRepository.findById(id);
         customers.ifPresent(customersRepository::delete);
     }
 
     @Transactional
     public String loginCustomer(LoginBody loginBody) throws UserNotVerifiedException, EmailFailureException {
-        Optional<Customers> customerOpt = customersRepository.findByEmailIgnoreCase(loginBody.getEmail());
+        Optional<Customer> customerOpt = customersRepository.findByEmailIgnoreCase(loginBody.getEmail());
         if (customerOpt.isPresent()) {
-            Customers customers = customerOpt.get();
+            Customer customers = customerOpt.get();
             if (encryptService.verifyPassword(loginBody.getPassword(), customers.getPassword())) {
                 if (customers.getEmailVerified()) {
                     return jwtService.generateJWT(customers);
                 } else {
-                    List<VerificationToken> verificationTokenList = customers.getVerificationTokens();
-                    boolean resend = verificationTokenList.isEmpty() || verificationTokenList.get(0).getCreatedTimestamp().before(new Timestamp(System.currentTimeMillis() - 60 * 60 * 1000));
+                    java.util.List<VerificationToken> verificationTokenList = new java.util.ArrayList<>(customers.getVerificationTokens());
+                    boolean resend = verificationTokenList.isEmpty() || verificationTokenList.get(0).getCreatedTimestamp().isBefore(Instant.now().minusSeconds(60 * 60));
                     if (resend) {
                         VerificationToken verificationToken = createVerificationToken(customers);
                         verificationTokenRepository.save(verificationToken);
@@ -106,11 +107,11 @@ public class CustomersService {
         Optional<VerificationToken> verificationTokenOpt = verificationTokenRepository.findByToken(token);
         if (verificationTokenOpt.isPresent()) {
             VerificationToken verificationToken = verificationTokenOpt.get();
-            Customers customers = verificationToken.getCustomers();
+            Customer customers = verificationToken.getCustomer();
             if (!customers.getEmailVerified()) {
                 customers.setEmailVerified(true);
                 customersRepository.save(customers);
-                verificationTokenRepository.deleteByCustomers(customers);
+                verificationTokenRepository.deleteByCustomer(customers);
                 return true;
             }
         }
@@ -119,9 +120,9 @@ public class CustomersService {
 
     @Transactional
     public void forgotPassword(String email) throws EmailFailureException, EmailNotFoundException {
-        Optional<Customers> optionalCustomers = customersRepository.findByEmailIgnoreCase(email);
+        Optional<Customer> optionalCustomers = customersRepository.findByEmailIgnoreCase(email);
         if (optionalCustomers.isPresent()) {
-            Customers customers = optionalCustomers.get();
+            Customer customers = optionalCustomers.get();
             String token = jwtService.generateResetPassword(customers);
             emailService.sendResetPasswordEmail(customers, token);
         } else {
@@ -132,20 +133,20 @@ public class CustomersService {
     @Transactional
     public void resetPassword (PasswordResetBody passwordResetBody) {
         String email = jwtService.getEmailResetPassword(passwordResetBody.getToken());
-        Optional<Customers> optCus = customersRepository.findByEmailIgnoreCase(email);
+        Optional<Customer> optCus = customersRepository.findByEmailIgnoreCase(email);
         if (optCus.isPresent()) {
-            Customers customers = optCus.get();
+            Customer customers = optCus.get();
             String passwordEncode = encryptService.encryptPassword(passwordResetBody.getPassword());
             customers.setPassword(passwordEncode);
             customersRepository.save(customers);
         }
     }
 
-    public  boolean userHasPermissionToUser (Customers customers, Integer id) {
+    public  boolean userHasPermissionToUser (Customer customers, Integer id) {
         return Objects.equals(customers.getId(), id);
     }
 
-    public boolean verifyCustomerId(Customers customers, Integer id) {
+    public boolean verifyCustomerId(Customer customers, Integer id) {
         return !customers.getId().equals(id);
     }
 }

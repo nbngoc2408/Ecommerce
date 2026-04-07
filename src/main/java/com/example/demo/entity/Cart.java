@@ -12,28 +12,12 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
-@Table(name = "product")
-public class Product {
+@Table(name = "cart")
+public class Cart {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_id", nullable = false)
+    @Column(name = "cart_id", nullable = false)
     private Integer id;
-
-    @Size(max = 255)
-    @Column(name = "name")
-    private String name;
-
-    @Size(max = 100)
-    @Column(name = "brand", length = 100)
-    private String brand;
-
-    @Size(max = 100)
-    @Column(name = "model", length = 100)
-    private String model;
-
-    @Size(max = 255)
-    @Column(name = "description")
-    private String description;
 
     @NotNull
     @ColumnDefault("now()")
@@ -45,8 +29,12 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Size(max = 50)
+    @Column(name = "status", length = 50)
+    private String status;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
 
 }
