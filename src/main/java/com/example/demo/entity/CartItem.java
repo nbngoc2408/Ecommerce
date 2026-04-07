@@ -1,23 +1,25 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
-import java.math.BigDecimal;
+import java.time.Instant;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "order_item")
-public class OrderItem {
+@Table(name = "cart_item")
+public class CartItem {
     @EmbeddedId
-    private OrderItemId id;
+    private CartItemId id;
 
-    @MapsId("orderId")
+    @MapsId("cartId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "order_id", nullable = false)
-    private com.example.demo.entity.Order order;
+    @JoinColumn(name = "cart_id", nullable = false)
+    private Cart cart;
 
     @MapsId("productVariantId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -27,10 +29,9 @@ public class OrderItem {
     @Column(name = "quantity")
     private Integer quantity;
 
-    @Column(name = "unit_price", precision = 10, scale = 2)
-    private BigDecimal unitPrice;
-
-    @Column(name = "discount", precision = 10, scale = 2)
-    private BigDecimal discount;
+    @NotNull
+    @ColumnDefault("now()")
+    @Column(name = "added_at", nullable = false)
+    private Instant addedAt;
 
 }

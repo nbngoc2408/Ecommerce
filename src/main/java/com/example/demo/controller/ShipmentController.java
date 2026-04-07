@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.Customers;
+import com.example.demo.entity.Customer;
 import com.example.demo.entity.Shipment;
 import com.example.demo.service.ShipmentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ public class ShipmentController {
     private ShipmentService shipmentService;
 
     @GetMapping
-    public List<Shipment> getShipments(@AuthenticationPrincipal Customers customers) {
+    public List<Shipment> getShipments(@AuthenticationPrincipal Customer customers) {
         return shipmentService.findShipmentsByCustomer(customers);
     }
 }

@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.entity.Customers;
+import com.example.demo.entity.Customer;
 import com.example.demo.entity.VerificationToken;
 import com.example.demo.exception.EmailFailureException;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +31,7 @@ public class EmailService {
 
     public void sendVerificationEmail(VerificationToken verificationToken) throws EmailFailureException {
         SimpleMailMessage simpleMailMessage = makeMailMessage();
-        simpleMailMessage.setTo(verificationToken.getCustomers().getEmail());
+        simpleMailMessage.setTo(verificationToken.getCustomer().getEmail());
         simpleMailMessage.setSubject("Verify your account.");
         simpleMailMessage.setText("Please follow the link bellow to verify your email to activate your account.\n" + frontUrl + "/auth/verify?token=" + verificationToken.getToken());
         try {
@@ -41,7 +41,7 @@ public class EmailService {
         }
     }
 
-    public void sendResetPasswordEmail(Customers customers, String token) throws EmailFailureException {
+    public void sendResetPasswordEmail(Customer customers, String token) throws EmailFailureException {
         SimpleMailMessage simpleMailMessage = makeMailMessage();
         simpleMailMessage.setTo(customers.getEmail());
         simpleMailMessage.setSubject("Reset your password.");

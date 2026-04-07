@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.entity.Customers;
+import com.example.demo.entity.Customer;
 import com.example.demo.exception.CustomerException;
 import com.example.demo.exception.EmailFailureException;
 import com.example.demo.exception.EmailNotFoundException;
@@ -29,7 +29,7 @@ public class Authentication {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Customers> registerUser(@Valid @RequestBody RegistrationBody customer) {
+    public ResponseEntity<Customer> registerUser(@Valid @RequestBody RegistrationBody customer) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(customersService.registerCustomer(customer));
         } catch (CustomerException e) {
@@ -75,7 +75,7 @@ public class Authentication {
     }
 
     @GetMapping("/me")
-    public Customers getUserLogin(@AuthenticationPrincipal Customers customers) {
+    public Customer getUserLogin(@AuthenticationPrincipal Customer customers) {
 //        SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return customers;
     }

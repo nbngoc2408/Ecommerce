@@ -1,6 +1,6 @@
 package com.example.demo.security;
 
-import com.example.demo.entity.Customers;
+import com.example.demo.entity.Customer;
 import com.example.demo.service.CustomersService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -109,7 +109,7 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
                         Integer userId = Integer.valueOf(params.get("userId"));
                         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                         if (authentication != null) {
-                            Customers customers = (Customers) authentication.getPrincipal();
+                            Customer customers = (Customer) authentication.getPrincipal();
                             if (!customersService.userHasPermissionToUser(customers, userId)) {
                                 message = null;
                             }

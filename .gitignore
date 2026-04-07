@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### VIBE CODE ###
+.claude/
+specs/
+CLAUDE.md
+PLAN.md
+GEMINI.md
+.specify/
