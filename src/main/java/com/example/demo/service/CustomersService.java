@@ -7,6 +7,7 @@ import com.example.demo.exception.EmailFailureException;
 import com.example.demo.exception.EmailNotFoundException;
 import com.example.demo.exception.UserNotVerifiedException;
 import com.example.demo.repository.CustomersRepository;
+import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.VerificationTokenRepository;
 import com.example.demo.request.LoginBody;
 import com.example.demo.request.PasswordResetBody;
@@ -14,6 +15,8 @@ import com.example.demo.request.RegistrationBody;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.example.demo.entity.Role;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -24,14 +27,16 @@ import java.time.Instant;
 @Service
 public class CustomersService {
     private final CustomersRepository customersRepository;
+    private final RoleRepository roleRepository;
     private final EncryptService encryptService;
     private final JWTService jwtService;
     private final EmailService emailService;
     private final VerificationTokenRepository verificationTokenRepository;
 
     @Autowired
-    public CustomersService(CustomersRepository customersRepository, EncryptService encryptService, JWTService jwtService, EmailService emailService, VerificationTokenRepository verificationTokenRepository) {
+    public CustomersService(CustomersRepository customersRepository, RoleRepository roleRepository, EncryptService encryptService, JWTService jwtService, EmailService emailService, VerificationTokenRepository verificationTokenRepository) {
         this.customersRepository = customersRepository;
+        this.roleRepository = roleRepository;
         this.encryptService = encryptService;
         this.jwtService = jwtService;
         this.emailService = emailService;
@@ -47,6 +52,9 @@ public class CustomersService {
             customers.setLastName(register.getLastName());
             customers.setEmail(register.getEmail());
             customers.setPassword(encryptService.encryptPassword(register.getPassword()));
+            Role customerRole = roleRepository.findByName("CUSTOMER")
+                    .orElseThrow(() -> new RuntimeException("CUSTOMER role not found in database"));
+            customers.getRoles().add(customerRole);
             VerificationToken verificationToken = createVerificationToken(customers);
             emailService.sendVerificationEmail(verificationToken);
             return customersRepository.save(customers);

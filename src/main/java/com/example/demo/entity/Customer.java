@@ -47,6 +47,14 @@ public class Customer {
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified = false;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "customer_role",
+            joinColumns = @JoinColumn(name = "customer_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new LinkedHashSet<>();
+
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<VerificationToken> verificationTokens = new LinkedHashSet<>();
 

@@ -1,6 +1,7 @@
 package com.example.demo.security;
 
 import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.example.demo.entity.Customer;
 import com.example.demo.repository.CustomersRepository;
 import com.example.demo.service.JWTService;
@@ -13,13 +14,14 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,11 +52,16 @@ public class JWTRequestFilter extends OncePerRequestFilter implements ChannelInt
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7);
             try {
-                String userEmail = jwtService.getUserEmail(token);
+                DecodedJWT decodedJWT = jwtService.verifyToken(token);
+                String userEmail = jwtService.getUserEmailFromJWT(decodedJWT);
+                List<String> roles = jwtService.getUserRolesFromJWT(decodedJWT);
                 Optional<Customer> customers = customersRepository.findByEmail(userEmail);
                 if (customers.isPresent()) {
                     Customer user = customers.get();
-                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+                    List<GrantedAuthority> authorities = roles.stream()
+                            .map(role -> (GrantedAuthority) new SimpleGrantedAuthority("ROLE_" + role))
+                            .toList();
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     return authenticationToken;
                 }
