@@ -7,6 +7,7 @@ import com.example.demo.service.ProduceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public class ProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDto> save(@RequestBody ProductDto product) {
         ProductDto savedProduct = produceService.save(product);
         if (savedProduct != null) {
@@ -44,11 +46,13 @@ public class ProductController {
     }
 
     @PutMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public Product update(@RequestBody Product product) {
         return produceService.update(product);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteById(@PathVariable Integer id) {
         produceService.deleteById(id);
     }

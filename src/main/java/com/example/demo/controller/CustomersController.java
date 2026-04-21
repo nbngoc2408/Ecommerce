@@ -6,10 +6,9 @@ import com.example.demo.repository.ShipmentRepository;
 import com.example.demo.request.DataChange;
 import com.example.demo.service.CustomersService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,39 +34,38 @@ public class CustomersController {
     }
 
     @GetMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public List<Customer> findAll() {
         return customersService.findAll();
     }
 
     @PostMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public Customer saveCustomer(@RequestBody Customer customers) {
         return customersService.save(customers);
     }
 
     @PutMapping()
+    @PreAuthorize("hasRole('ADMIN')")
     public Customer updateCustomer(@RequestBody Customer customers) {
         return  customersService.update(customers);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @resourceSecurity.isOwner(#id, authentication)")
     public void deleteCustomer(@PathVariable Integer id) {
         customersService.deleteCustomerById(id);
     }
 
     @GetMapping("/{customerId}/shipment")
-    public ResponseEntity<List<Shipment>> getShipment(@AuthenticationPrincipal Customer customers , @PathVariable Integer customerId) {
-        if (customersService.verifyCustomerId(customers, customerId)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
+    @PreAuthorize("hasRole('ADMIN') or @resourceSecurity.isOwner(#customerId, authentication)")
+    public ResponseEntity<List<Shipment>> getShipment(@PathVariable Integer customerId) {
         return ResponseEntity.ok(shipmentRepository.findByOrder_Customer_Id(customerId));
     }
 
     @PutMapping("/{userId}/shipment")
-    public ResponseEntity<Shipment> addNewShipment(@PathVariable Integer userId, @RequestBody Shipment shipment
-            , @AuthenticationPrincipal Customer customers) {
-        if (customersService.verifyCustomerId(customers, userId)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
+    @PreAuthorize("hasRole('ADMIN') or @resourceSecurity.isOwner(#userId, authentication)")
+    public ResponseEntity<Shipment> addNewShipment(@PathVariable Integer userId, @RequestBody Shipment shipment) {
         shipment.setId(null);
         Customer refCus = new Customer(); //case admin want to add new shipment for other customers
         refCus.setId(userId);
@@ -81,11 +79,8 @@ public class CustomersController {
     }
 
     @PatchMapping("/{userId}/shipment/{shipmentId}")
-    public ResponseEntity<Shipment> updateShipment(@PathVariable Integer shipmentId, @PathVariable Integer userId, @RequestBody Shipment shipment
-            , @AuthenticationPrincipal Customer customers) {
-        if (customersService.verifyCustomerId(customers, userId)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
+    @PreAuthorize("hasRole('ADMIN') or @resourceSecurity.isOwner(#userId, authentication)")
+    public ResponseEntity<Shipment> updateShipment(@PathVariable Integer shipmentId, @PathVariable Integer userId, @RequestBody Shipment shipment) {
         if (Objects.equals(shipment.getId(), shipmentId)) {
             Optional<Shipment> opOriginalShipment = shipmentRepository.findById(shipmentId);
             if (opOriginalShipment.isPresent() && opOriginalShipment.get().getOrder() != null && opOriginalShipment.get().getOrder().getCustomer() != null && Objects.equals(opOriginalShipment.get().getOrder().getCustomer().getId(), userId)) {

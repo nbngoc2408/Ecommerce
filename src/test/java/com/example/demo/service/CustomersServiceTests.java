@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.entity.Customer;
 import com.example.demo.entity.VerificationToken;
 import com.example.demo.exception.CustomerException;
 import com.example.demo.exception.EmailFailureException;
@@ -31,6 +32,9 @@ public class CustomersServiceTests {
 
     @Autowired
     private CustomersService customersService;
+
+    @Autowired
+    private JWTService jwtService;
 
     @Autowired
     private VerificationTokenRepository verificationTokenRepository;
@@ -94,5 +98,35 @@ public class CustomersServiceTests {
             String token = tokenList.get(0).getToken();
             Assertions.assertTrue(customersService.verifyCustomer(token), "User should verify success.");
         }
+    }
+
+    @Test
+    @Transactional
+    public void testLoginJwtContainsRolesClaim() throws UserNotVerifiedException, EmailFailureException {
+        LoginBody loginBody = new LoginBody();
+        loginBody.setEmail("userA@junittest.com");
+        loginBody.setPassword("PasswordA123");
+        String token = customersService.loginCustomer(loginBody);
+        Assertions.assertNotNull(token, "Login should return a JWT.");
+
+        List<String> roles = jwtService.getUserRoles(token);
+        Assertions.assertEquals(1, roles.size(), "Seeded user should have exactly one role.");
+        Assertions.assertTrue(roles.contains("CUSTOMER"), "Seeded user's JWT should contain CUSTOMER role.");
+    }
+
+    @Test
+    @Transactional
+    public void testRegistrationAssignsCustomerRole() throws CustomerException, EmailFailureException {
+        RegistrationBody body = new RegistrationBody();
+        body.setEmail("RbacTest$newUser@junittest.com");
+        body.setPassword("TestPassword123");
+        body.setFirstName("New");
+        body.setLastName("User");
+
+        Customer registered = customersService.registerCustomer(body);
+        Assertions.assertNotNull(registered, "Registration should succeed.");
+        Assertions.assertEquals(1, registered.getRoles().size(), "New user should have exactly one role.");
+        Assertions.assertEquals("CUSTOMER", registered.getRoles().iterator().next().getName(),
+                "New user should be assigned the CUSTOMER role.");
     }
 }

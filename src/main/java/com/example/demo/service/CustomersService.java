@@ -153,8 +153,4 @@ public class CustomersService {
     public  boolean userHasPermissionToUser (Customer customers, Integer id) {
         return Objects.equals(customers.getId(), id);
     }
-
-    public boolean verifyCustomerId(Customer customers, Integer id) {
-        return !customers.getId().equals(id);
-    }
 }
